@@ -1,11 +1,13 @@
 "use client"
 
+import { IconsGrid } from "@/components/icon-grid"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { BASE_URL, REPO_PATH } from "@/constants"
-import type { AuthorData, Icon } from "@/types/icons"
+import { formatIconName } from "@/lib/utils"
+import type { AuthorData, Icon, IconFile } from "@/types/icons"
 import confetti from "canvas-confetti"
 import { motion } from "framer-motion"
 import { Check, Copy, Download, FileType, Github, Moon, PaletteIcon, Sun, Type } from "lucide-react"
@@ -21,6 +23,7 @@ export type IconDetailsProps = {
 	icon: string
 	iconData: Icon
 	authorData: AuthorData
+	allIcons: IconFile
 }
 
 function IconVariant({ 
@@ -426,22 +429,25 @@ export function IconDetails({ icon, iconData, authorData }: IconDetailsProps) {
 	}
 
 	return (
-		<div className="container mx-auto pt-12 pb-14">
+		<main className="container mx-auto pt-12 pb-14 px-4 sm:px-6 lg:px-8">
 			<div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
 				<div className="lg:col-span-1">
 					<Card className="h-full bg-background/50 border shadow-lg">
 						<CardHeader className="pb-4">
 							<div className="flex flex-col items-center">
-								<div className="relative w-32 h-32  rounded-xl overflow-hidden border flex items-center justify-center p-3 ">
+								<div className="relative w-32 h-32 rounded-xl overflow-hidden border flex items-center justify-center p-3">
 									<Image
 										src={`${BASE_URL}/${iconData.base}/${icon}.${iconData.base}`}
 										width={96}
 										height={96}
-										alt={icon}
+										placeholder="empty"
+										alt={`High quality ${formatedIconName} icon in ${iconData.base.toUpperCase()} format`}
 										className="w-full h-full object-contain"
 									/>
 								</div>
-								<CardTitle className="text-2xl font-bold capitalize text-center mb-2">{icon}</CardTitle>
+								<CardTitle className="text-2xl font-bold capitalize text-center mb-2">
+									<h1>{formatedIconName}</h1>
+								</CardTitle>
 							</div>
 						</CardHeader>
 						<CardContent>
@@ -450,14 +456,14 @@ export function IconDetails({ icon, iconData, authorData }: IconDetailsProps) {
 									<div className="space-y-2">
 										<div className="flex items-center gap-2">
 											<p className="text-sm">
-												<span className="font-medium">Updated on:</span> {formattedDate}
+												<span className="font-medium">Updated on:</span> <time dateTime={iconData.update.timestamp}>{formattedDate}</time>
 											</p>
 										</div>
 										<div className="flex items-center gap-2">
 											<div className="flex items-center gap-2">
 												<p className="text-sm font-medium">By:</p>
 												<Avatar className="h-5 w-5 border">
-													<AvatarImage src={authorData.avatar_url} alt={authorName} />
+													<AvatarImage src={authorData.avatar_url} alt={`${authorName}'s avatar`} />
 													<AvatarFallback>{authorName ? authorName.slice(0, 2).toUpperCase() : "??"}</AvatarFallback>
 												</Avatar>
 												{authorData.html_url && (
@@ -480,7 +486,7 @@ export function IconDetails({ icon, iconData, authorData }: IconDetailsProps) {
 
 								{iconData.categories && iconData.categories.length > 0 && (
 									<div>
-										<h3 className="text-sm font-semibold text-muted-foreground">Categories</h3>
+										<h3 className="text-sm font-semibold text-muted-foreground mb-2">Categories</h3>
 										<div className="flex flex-wrap gap-2">
 											{iconData.categories.map((category) => (
 												<Link key={category} href={`/icons?category=${encodeURIComponent(category)}`} className="cursor-pointer">
@@ -501,7 +507,7 @@ export function IconDetails({ icon, iconData, authorData }: IconDetailsProps) {
 
 								{iconData.aliases && iconData.aliases.length > 0 && (
 									<div>
-										<h3 className="text-sm font-semibold text-muted-foreground">Aliases</h3>
+										<h3 className="text-sm font-semibold text-muted-foreground mb-2">Aliases</h3>
 										<div className="flex flex-wrap gap-2">
 											{iconData.aliases.map((alias) => (
 												<Badge
@@ -518,7 +524,7 @@ export function IconDetails({ icon, iconData, authorData }: IconDetailsProps) {
 								)}
 
 								<div>
-									<h3 className="text-sm font-semibold text-muted-foreground">About this icon</h3>
+									<h3 className="text-sm font-semibold text-muted-foreground mb-2">About this icon</h3>
 									<div className="text-xs text-muted-foreground space-y-2">
 										<p>
 											Available in{" "}
@@ -533,8 +539,8 @@ export function IconDetails({ icon, iconData, authorData }: IconDetailsProps) {
 											{iconData.wordmark && " Wordmark variants are also available for enhanced branding options."}
 										</p>
 										<p>
-											Use the {icon} icon in your web applications, dashboards, or documentation to enhance visual communication and user
-											experience.
+											Perfect for adding to dashboards, app directories, documentation, or anywhere you need the {formatIconName(icon)}{" "}
+											logo.
 										</p>
 									</div>
 								</div>
@@ -546,7 +552,9 @@ export function IconDetails({ icon, iconData, authorData }: IconDetailsProps) {
 				<div className="lg:col-span-2">
 					<Card className="h-full bg-background/50 shadow-lg">
 						<CardHeader>
-							<CardTitle>Icon variants</CardTitle>
+							<CardTitle>
+								<h2>Icon variants</h2>
+							</CardTitle>
 							<CardDescription>Click on any icon to copy its URL to your clipboard</CardDescription>
 						</CardHeader>
 						<CardContent>
@@ -613,7 +621,7 @@ export function IconDetails({ icon, iconData, authorData }: IconDetailsProps) {
 						<CardContent>
 							<div className="space-y-6">
 								<div className="">
-									<h3 className="text-sm font-semibold text-muted-foreground">Base format</h3>
+									<h3 className="text-sm font-semibold text-muted-foreground mb-2">Base format</h3>
 									<div className="flex items-center gap-2">
 										<FileType className="w-4 h-4 text-blue-500" />
 										<div className="px-3 py-1.5  border border-border rounded-lg text-sm font-medium">{iconData.base.toUpperCase()}</div>
@@ -621,7 +629,7 @@ export function IconDetails({ icon, iconData, authorData }: IconDetailsProps) {
 								</div>
 
 								<div className="">
-									<h3 className="text-sm font-semibold text-muted-foreground">Available formats</h3>
+									<h3 className="text-sm font-semibold text-muted-foreground mb-2">Available formats</h3>
 									<div className="flex flex-wrap gap-2">
 										{availableFormats.map((format) => (
 											<div key={format} className="px-3 py-1.5  border border-border rounded-lg text-xs font-medium">
@@ -633,7 +641,7 @@ export function IconDetails({ icon, iconData, authorData }: IconDetailsProps) {
 
 								{iconData.colors && (
 									<div className="">
-										<h3 className="text-sm font-semibold text-muted-foreground">Color variants</h3>
+										<h3 className="text-sm font-semibold text-muted-foreground mb-2">Color variants</h3>
 										<div className="space-y-2">
 											{Object.entries(iconData.colors).map(([theme, variant]) => (
 												<div key={theme} className="flex items-center gap-2">
@@ -669,7 +677,7 @@ export function IconDetails({ icon, iconData, authorData }: IconDetailsProps) {
 								)}
 
 								<div className="">
-									<h3 className="text-sm font-semibold text-muted-foreground">Source</h3>
+									<h3 className="text-sm font-semibold text-muted-foreground mb-2">Source</h3>
 									<Button variant="outline" className="w-full" asChild>
 										<Link href={`${REPO_PATH}/blob/main/meta/${icon}.json`} target="_blank" rel="noopener noreferrer">
 											<Github className="w-4 h-4 mr-2" />
@@ -683,6 +691,63 @@ export function IconDetails({ icon, iconData, authorData }: IconDetailsProps) {
 					</Card>
 				</div>
 			</div>
-		</div>
+			{iconData.categories &&
+				iconData.categories.length > 0 &&
+				(() => {
+					const MAX_RELATED_ICONS = 16
+					const currentCategories = iconData.categories || []
+
+					const relatedIconsWithScore = Object.entries(allIcons)
+						.map(([name, data]) => {
+							if (name === icon) return null // Exclude the current icon
+
+							const otherCategories = data.categories || []
+							const commonCategories = currentCategories.filter((cat) => otherCategories.includes(cat))
+							const score = commonCategories.length
+
+							return score > 0 ? { name, data, score } : null
+						})
+						.filter((item): item is { name: string; data: Icon; score: number } => item !== null) // Type guard
+						.sort((a, b) => b.score - a.score) // Sort by score DESC
+
+					const topRelatedIcons = relatedIconsWithScore.slice(0, MAX_RELATED_ICONS)
+
+					const viewMoreUrl = `/icons?${currentCategories.map((cat) => `category=${encodeURIComponent(cat)}`).join("&")}`
+
+					if (topRelatedIcons.length === 0) return null
+
+					return (
+						<section className="container mx-auto mt-12" aria-labelledby="related-icons-title">
+							<Card className="bg-background/50 border shadow-lg">
+								<CardHeader>
+									<CardTitle>
+										<h2 id="related-icons-title">Related Icons</h2>
+									</CardTitle>
+									<CardDescription>
+										Other icons from {currentCategories.map((cat) => cat.replace(/-/g, " ")).join(", ")} categories
+									</CardDescription>
+								</CardHeader>
+								<CardContent>
+									<IconsGrid filteredIcons={topRelatedIcons} matchedAliases={{}} />
+									{relatedIconsWithScore.length > MAX_RELATED_ICONS && (
+										<div className="mt-6 text-center">
+											<Button
+												asChild
+												variant="link"
+												className="text-muted-foreground hover:text-primary transition-colors duration-200 hover:no-underline"
+											>
+												<Link href={viewMoreUrl} className="no-underline">
+													View all related icons
+													<ArrowRight className="ml-2 h-4 w-4" />
+												</Link>
+											</Button>
+										</div>
+									)}
+								</CardContent>
+							</Card>
+						</section>
+					)
+				})()}
+		</main>
 	)
 }
